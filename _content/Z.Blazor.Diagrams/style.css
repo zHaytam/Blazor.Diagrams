@@ -1,0 +1,90 @@
+﻿.diagram-canvas {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    outline: none;
+    overflow: hidden;
+    cursor: -webkit-grab;
+    cursor: grab;
+    touch-action: none;
+}
+
+.diagram-svg-layer, .diagram-html-layer {
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    position: absolute;
+    pointer-events: none;
+    -webkit-transform-origin: 0px 0px;
+        -ms-transform-origin: 0px 0px;
+            transform-origin: 0px 0px;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.html-layer, .svg-layer {
+    position: absolute;
+    pointer-events: none;
+    -webkit-transform-origin: 0px 0px;
+        -ms-transform-origin: 0px 0px;
+            transform-origin: 0px 0px;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.node {
+    position: absolute;
+    -webkit-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+    cursor: move;
+    pointer-events: all;
+}
+
+    .node.locked {
+        cursor: pointer;
+    }
+
+.link {
+    pointer-events: visiblePainted;
+    cursor: pointer;
+}
+
+    .link path.selection-helper:hover {
+        stroke-opacity: 0.05;
+    }
+
+.diagram-navigator {
+    z-index: 10;
+}
+
+    .diagram-navigator .current-view {
+        position: absolute;
+        border: 2px solid black;
+    }
+
+.group {
+    position: absolute;
+    -webkit-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+    cursor: move;
+    pointer-events: all;
+}
+
+    .group .layer {
+        position: absolute;
+        overflow: visible;
+        pointer-events: none;
+    }
+
+.link foreignObject {
+    overflow: visible;
+    pointer-events: none;
+}
+/*# sourceMappingURL=wwwroot\style.css.map */
