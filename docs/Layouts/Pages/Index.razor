@@ -1,0 +1,129 @@
+﻿@page "/"
+
+@using Blazor.Diagrams.Core
+@using Blazor.Diagrams.Core.Geometry
+@using Blazor.Diagrams.Core.Models
+@using QG = QuikGraph
+
+<!-- required to resolve DiagramCanvas component -->
+@using Blazor.Diagrams.Components
+@using GraphShape.Algorithms.Layout
+
+<h1>Hello, World of Layouts!</h1>
+
+<!--
+Parent of DiagramCanvas has to have a fixed width/height
+or it will not be rendered.
+
+100vw = 100% viewport width
+100vh = 100% viewport height
+-->
+<div style="width:100vw; height: 70vh">
+  <CascadingValue Value="_diagram">
+    <DiagramCanvas></DiagramCanvas>
+  </CascadingValue>
+</div>
+
+<div>
+  <MatSelect Label="Layout chart" @bind-Value="@_layout" Style="width: 125px">
+    @foreach (var algo in new GraphShape.Algorithms.Layout.StandardLayoutAlgorithmFactory<string, QG.IEdge<string>, QG.IBidirectionalGraph<string, QG.IEdge<string>>>().AlgorithmTypes)
+    {
+      <MatOption TValue="string" Value="@algo">@algo</MatOption>
+    }
+  </MatSelect>
+
+  <MatButton Icon="grid_on" @onclick="@(_ => OnLayout(_layout))" Raised="true">Go!</MatButton>
+</div>
+
+@code {
+  private Diagram _diagram { get; set; }
+
+  private string _layout;
+
+  protected override void OnInitialized()
+  {
+    base.OnInitialized();
+
+    var options = new DiagramOptions
+    {
+      DeleteKey = "Delete", // What key deletes the selected nodes/links
+      DefaultNodeComponent = null, // Default component for nodes
+      AllowMultiSelection = true, // Whether to allow multi selection using CTRL
+      Links = new DiagramLinkOptions
+      {
+      },
+      Zoom = new DiagramZoomOptions
+      {
+        Minimum = 0.5, // Minimum zoom value
+        Inverse = false, // Whether to inverse the direction of the zoom when using the wheel
+      }
+    };
+    _diagram = new Diagram(options);
+
+    Setup();
+  }
+
+  private void Setup()
+  {
+    var node1 = NewNode(50, 50);
+    var node2 = NewNode(300, 300);
+    var node3 = NewNode(300, 50);
+    _diagram.Nodes.Add(new[] { node1, node2, node3 });
+
+    // use portless nodes so connection points can move around after layout
+    _diagram.Links.Add(new LinkModel(node1, node2));
+  }
+
+  private static NodeModel NewNode(double x, double y)
+  {
+    var node = new NodeModel(Guid.NewGuid().ToString(), new Point(x, y));
+    return node;
+  }
+
+  private void OnLayout(string layout)
+  {
+    if (string.IsNullOrWhiteSpace(layout))
+    {
+      return;
+    }
+
+    // convert Z.Blazor.Diagram to QuikGraph
+    var graph = new QG.BidirectionalGraph<NodeModel, QG.Edge<NodeModel>>();
+    var nodes = _diagram.Nodes.OfType<NodeModel>().ToList();
+    var edges = _diagram.Links.OfType<LinkModel>()
+      .Select(lm =>
+      {
+        var source = nodes.Single(dn => dn.Id == lm.SourceNode.Id);
+        var target = nodes.Single(dn => dn.Id == lm?.TargetNode?.Id);
+        return new QG.Edge<NodeModel>(source, target);
+      })
+      .ToList();
+    graph.AddVertexRange(nodes);
+    graph.AddEdgeRange(edges);
+
+    // run GraphShape algorithm
+    var positions = nodes.ToDictionary(nm => nm, dn => new GraphShape.Point(dn.Position.X, dn.Position.Y));
+    var sizes = nodes.ToDictionary(nm => nm, dn => new GraphShape.Size(dn.Size?.Width ?? 100, dn.Size?.Height ?? 100));
+    var layoutCtx = new LayoutContext<NodeModel, QG.Edge<NodeModel>, QG.BidirectionalGraph<NodeModel, QG.Edge<NodeModel>>>(graph, positions, sizes, LayoutMode.Simple);
+    var algoFact = new StandardLayoutAlgorithmFactory<NodeModel, QG.Edge<NodeModel>, QG.BidirectionalGraph<NodeModel, QG.Edge<NodeModel>>>();
+    var algo = algoFact.CreateAlgorithm(layout, layoutCtx, null);
+
+    algo.Compute();
+
+    // update NodeModel positions
+    try
+    {
+      _diagram.SuspendRefresh = true;
+      foreach (var vertPos in algo.VerticesPositions)
+      {
+        // NOTE;  have to use SetPosition which takes care of updating everything
+        vertPos.Key.SetPosition(vertPos.Value.X, vertPos.Value.Y);
+      }
+    }
+    finally
+    {
+      _diagram.SuspendRefresh = false;
+    }
+  }
+
+}

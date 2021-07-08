@@ -1,0 +1,12 @@
+@using CustomNodesLinks.Models
+
+<div class="graphml-node @(Node.Selected ? " graphml-selected" : "")">
+  @Node.Name
+</div>
+
+@code {
+
+  [Parameter]
+  public DiagramNode Node { get; set; }
+
+}

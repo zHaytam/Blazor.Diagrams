@@ -1,0 +1,69 @@
+﻿@page "/"
+
+@using Blazor.Diagrams.Core
+@using Blazor.Diagrams.Core.Geometry
+@using Blazor.Diagrams.Core.Models
+
+<!-- required to resolve DiagramCanvas component -->
+@using Blazor.Diagrams.Components
+@using CustomNodesLinks.Models
+@using CustomNodesLinks.Widgets
+
+<h1>Hello, World of Custom Nodes and Links!</h1>
+
+<!--
+Parent of DiagramCanvas has to have a fixed width/height
+or it will not be rendered.
+
+100vw = 100% viewport width
+100vh = 100% viewport height
+-->
+<div style="width:100vw; height: 100vh">
+  <CascadingValue Value="_diagram">
+    <DiagramCanvas></DiagramCanvas>
+  </CascadingValue>
+</div>
+
+@code {
+  private Diagram _diagram { get; set; }
+
+  protected override void OnInitialized()
+  {
+    base.OnInitialized();
+
+    var options = new DiagramOptions
+    {
+      DeleteKey = "Delete", // What key deletes the selected nodes/links
+      DefaultNodeComponent = null, // Default component for nodes
+      AllowMultiSelection = true, // Whether to allow multi selection using CTRL
+      Links = new DiagramLinkOptions
+      {
+      },
+      Zoom = new DiagramZoomOptions
+      {
+        Minimum = 0.5, // Minimum zoom value
+        Inverse = false, // Whether to inverse the direction of the zoom when using the wheel
+      }
+    };
+    _diagram = new Diagram(options);
+
+  // connect node/link to renderer
+    _diagram.RegisterModelComponent<DiagramNode, DiagramNodeWidget>();
+    _diagram.RegisterModelComponent<DiagramLinkLabel, DiagramLinkLabelWidget>();
+
+    Setup();
+  }
+
+  private void Setup()
+  {
+    var node1 = new DiagramNode("Node 0", new Point(50, 50));
+    var node2 = new DiagramNode("Node 1", new Point(300, 300));
+    var node3 = new DiagramNode("Node 2", new Point(300, 50));
+    _diagram.Nodes.Add(new[] { node1, node2, node3 });
+
+  // use portless links so connection points move around when we move node
+    var link = new DiagramLink($"{node1.Name}-->{node2.Name}", node1, node2);
+    _diagram.Links.Add(link);
+  }
+
+}

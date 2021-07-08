@@ -353,3 +353,14 @@ MigrationBackup/
 .ionide/
 .vscode/symbols.json
 .vscode/settings.json
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Mono auto generated files
+mono_crash.*
+
+# Coverlet code coverage output
+**/coverage.json
+**/coverage.opencover.xml
